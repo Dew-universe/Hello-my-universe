@@ -1,3 +1,3 @@
 # Hello-my-universe
 
-my name is Dew I'm leader of Dew-Universe.
+My name is Dew I'm Owner of Dew-Universe.
