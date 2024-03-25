@@ -54,7 +54,6 @@ def displayBoard(missedLetters, correctLetters, secretWord):
     for letter in missedLetters:
         print(letter, end=' ')
     print()
-
     blanks = '_' * len(secretWord)
 
     for i in range(len(secretWord)): # Replace blank with correctly guessed letter.
