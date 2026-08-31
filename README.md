@@ -1,5 +1,5 @@
 ```mermaid
-%%{init: {'flowchart': {'curve': 'ortho'}}}%%
+%%{init: {'flowchart': {'curve': 'monotoneY'}}}%%
 flowchart TD
     %% Styling Classes
     classDef startEnd fill:#2B3A42,stroke:#1E272C,stroke-width:2px,color:#fff;
