@@ -13,7 +13,7 @@ flowchart TD
     CheckApiTime -- Yes --> StartThread["Create Background Thread\nrequest_roboflow"]
     StartThread --> Compress["Compress JPEG 70% and Encode Base64"]
     Compress --> CallAPI[Send HTTP POST to Roboflow REST API]
-    CallAPI --> RecvJSON["Receive JSON & Update Predictions"]
+    CallAPI --> RecvJSON["Receive JSON and Update Predictions"]
     
     CheckApiTime -- No / Parallel --> CheckPredTime{"Latest AI Result\nAge <= 1.5s?"}
     RecvJSON --> CheckPredTime
