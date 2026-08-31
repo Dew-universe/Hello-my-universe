@@ -1,7 +1,14 @@
 ```mermaid
+สาเหตุที่เส้นยังโค้งอยู่เกิดจาก GitHub Markdown บังคับใช้เอนจิน dagre ในการวาดภาพ ทำให้เส้นย้อนกลับ (Loop back) พยายามหลบโหนดจนกลายเป็นเส้นโค้งครับ
+
+วิธีแก้ปัญหาเส้นโค้งใน GitHub ที่ได้ผลที่สุด คือการใช้ Subgraphs (แบ่งกล่องขอบเขตการทำงาน) ร่วมกับการจัดทิศทางเส้น เพื่อบีบให้ Mermaid ลากเส้นเป็นเส้นตรงหักมุมฉาก 90° ตามแนวบล็อกครับ
+
+ลองใช้โค้ดชุดนี้แทนได้เลยครับ:
+
+Code snippet
 graph TD
-    %% บังคับให้เส้นเชื่อมเป็นมุมฉาก/ทรงเหลี่ยม
-    linkStyle default interpolate step-after
+    %% บังคับสไตล์เส้นให้หักมุมฉาก
+    linkStyle default stroke:#555,stroke-width:1.5px,fill:none,interpolate:ortho;
 
     %% Styling Classes
     classDef startEnd fill:#2B3A42,stroke:#1E272C,stroke-width:2px,color:#fff;
@@ -21,13 +28,15 @@ graph TD
     ShowFrame --> CheckApiTime{"ถึงเวลาส่ง AI หรือยัง? - interval มากกว่า 0.5s"}:::decision
     
     %% API Thread Block
-    CheckApiTime -- ใช่ --> StartThread["สร้าง Thread ทำงานเบื้องหลัง request_roboflow"]:::aiProcess
-    StartThread --> Compress["บีบอัดภาพ JPEG 70% และแปลงเป็น Base64"]:::aiProcess
-    Compress --> CallAPI["ส่งภาพไปยัง Roboflow REST API"]:::aiProcess
-    CallAPI --> RecvJSON["รับค่า JSON และอัปเดตผลลัพธ์ Prediction"]:::aiProcess
-    RecvJSON --> CheckPredTime
-    
+    subgraph AI_Section ["ระบบประมวลผล AI"]
+        CheckApiTime -- ใช่ --> StartThread["สร้าง Thread ทำงานเบื้องหลัง request_roboflow"]:::aiProcess
+        StartThread --> Compress["บีบอัดภาพ JPEG 70% และแปลงเป็น Base64"]:::aiProcess
+        Compress --> CallAPI["ส่งภาพไปยัง Roboflow REST API"]:::aiProcess
+        CallAPI --> RecvJSON["รับค่า JSON และอัปเดตผลลัพธ์ Prediction"]:::aiProcess
+    end
+
     CheckApiTime -- ไม่ใช่/ทำขนาน --> CheckPredTime{"ผล AI ล่าสุดยังไม่หมดอายุ? - น้อยกว่าเท่ากับ 1.5s"}:::decision
+    RecvJSON --> CheckPredTime
     
     %% Bounding Box Render
     CheckPredTime -- ใช่ --> FilterConf{"ความมั่นใจ มากกว่าเท่ากับ 50% และเป็น Class โรคพืช?"}:::decision
@@ -37,12 +46,15 @@ graph TD
     CheckPredTime -- ไม่ใช่ --> ClearBox["ลบกรอบ Bounding Box ออก"]:::process --> CheckAlert
     
     %% LINE Notification Block
-    CheckAlert{"พบโรคพืช และคูลดาวน์แจ้งเตือน มากกว่า 15s?"}:::decision
-    CheckAlert -- ใช่ --> SendLine["สร้าง Thread ส่ง LINE send_line_message"]:::alertProcess
-    SendLine --> PushMsg["ส่งข้อความ Push Message ไปยัง LINE"]:::alertProcess
-    PushMsg --> UpdateTime["อัปเดตเวลาแจ้งเตือนล่าสุด"]:::alertProcess --> CheckQuit
-    
+    subgraph LINE_Section ["ระบบแจ้งเตือน"]
+        CheckAlert{"พบโรคพืช และคูลดาวน์แจ้งเตือน มากกว่า 15s?"}:::decision
+        CheckAlert -- ใช่ --> SendLine["สร้าง Thread ส่ง LINE send_line_message"]:::alertProcess
+        SendLine --> PushMsg["ส่งข้อความ Push Message ไปยัง LINE"]:::alertProcess
+        PushMsg --> UpdateTime["อัปเดตเวลาแจ้งเตือนล่าสุด"]:::alertProcess
+    end
+
     CheckAlert -- ไม่ใช่ --> CheckQuit
+    UpdateTime --> CheckQuit
     
     %% Exit Check
     CheckQuit{"กดปุ่ม q เพื่อเลิกหรือไม่?"}:::decision
