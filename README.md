@@ -1,8 +1,6 @@
 ```mermaid
-graph TD
-    %% บังคับสไตล์เส้นให้หักมุมฉาก
-    linkStyle default stroke:#555,stroke-width:1.5px,fill:none,interpolate:ortho;
-
+%%{init: {'flowchart': {'curve': 'ortho'}}}%%
+flowchart TD
     %% Styling Classes
     classDef startEnd fill:#2B3A42,stroke:#1E272C,stroke-width:2px,color:#fff;
     classDef process fill:#E3F2FD,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1;
@@ -20,16 +18,14 @@ graph TD
     CheckRet -- สำเร็จ --> ShowFrame["แสดงภาพ Live Stream บนหน้าจอ"]:::process
     ShowFrame --> CheckApiTime{"ถึงเวลาส่ง AI หรือยัง? - interval มากกว่า 0.5s"}:::decision
     
-    %% API Thread Block
-    subgraph AI_Section ["ระบบประมวลผล AI"]
-        CheckApiTime -- ใช่ --> StartThread["สร้าง Thread ทำงานเบื้องหลัง request_roboflow"]:::aiProcess
-        StartThread --> Compress["บีบอัดภาพ JPEG 70% และแปลงเป็น Base64"]:::aiProcess
-        Compress --> CallAPI["ส่งภาพไปยัง Roboflow REST API"]:::aiProcess
-        CallAPI --> RecvJSON["รับค่า JSON และอัปเดตผลลัพธ์ Prediction"]:::aiProcess
-    end
-
-    CheckApiTime -- ไม่ใช่/ทำขนาน --> CheckPredTime{"ผล AI ล่าสุดยังไม่หมดอายุ? - น้อยกว่าเท่ากับ 1.5s"}:::decision
+    %% API Process Block
+    CheckApiTime -- ใช่ --> StartThread["สร้าง Thread ทำงานเบื้องหลัง request_roboflow"]:::aiProcess
+    StartThread --> Compress["บีบอัดภาพ JPEG 70% และแปลงเป็น Base64"]:::aiProcess
+    Compress --> CallAPI["ส่งภาพไปยัง Roboflow REST API"]:::aiProcess
+    CallAPI --> RecvJSON["รับค่า JSON และอัปเดตผลลัพธ์ Prediction"]:::aiProcess
     RecvJSON --> CheckPredTime
+    
+    CheckApiTime -- ไม่ใช่/ทำขนาน --> CheckPredTime{"ผล AI ล่าสุดยังไม่หมดอายุ? - น้อยกว่าเท่ากับ 1.5s"}:::decision
     
     %% Bounding Box Render
     CheckPredTime -- ใช่ --> FilterConf{"ความมั่นใจ มากกว่าเท่ากับ 50% และเป็น Class โรคพืช?"}:::decision
@@ -39,15 +35,12 @@ graph TD
     CheckPredTime -- ไม่ใช่ --> ClearBox["ลบกรอบ Bounding Box ออก"]:::process --> CheckAlert
     
     %% LINE Notification Block
-    subgraph LINE_Section ["ระบบแจ้งเตือน"]
-        CheckAlert{"พบโรคพืช และคูลดาวน์แจ้งเตือน มากกว่า 15s?"}:::decision
-        CheckAlert -- ใช่ --> SendLine["สร้าง Thread ส่ง LINE send_line_message"]:::alertProcess
-        SendLine --> PushMsg["ส่งข้อความ Push Message ไปยัง LINE"]:::alertProcess
-        PushMsg --> UpdateTime["อัปเดตเวลาแจ้งเตือนล่าสุด"]:::alertProcess
-    end
-
+    CheckAlert{"พบโรคพืช และคูลดาวน์แจ้งเตือน มากกว่า 15s?"}:::decision
+    CheckAlert -- ใช่ --> SendLine["สร้าง Thread ส่ง LINE send_line_message"]:::alertProcess
+    SendLine --> PushMsg["ส่งข้อความ Push Message ไปยัง LINE"]:::alertProcess
+    PushMsg --> UpdateTime["อัปเดตเวลาแจ้งเตือนล่าสุด"]:::alertProcess --> CheckQuit
+    
     CheckAlert -- ไม่ใช่ --> CheckQuit
-    UpdateTime --> CheckQuit
     
     %% Exit Check
     CheckQuit{"กดปุ่ม q เพื่อเลิกหรือไม่?"}:::decision
