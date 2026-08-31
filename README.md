@@ -1,5 +1,8 @@
 ```mermaid
-flowchart TD
+graph TD
+    %% บังคับให้เส้นเชื่อมเป็นมุมฉาก/ทรงเหลี่ยม
+    linkStyle default interpolate step-after
+
     %% Styling Classes
     classDef startEnd fill:#2B3A42,stroke:#1E272C,stroke-width:2px,color:#fff;
     classDef process fill:#E3F2FD,stroke:#1565C0,stroke-width:1.5px,color:#0D47A1;
