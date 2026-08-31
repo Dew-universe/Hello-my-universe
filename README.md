@@ -8,17 +8,17 @@ flowchart TD
     
     CheckRet -- Yes --> ShowFrame[Display Live Stream via cv2.imshow]
     
-    ShowFrame --> CheckApiTime{"Time > 0.5s &\nNot Requesting API?"}
+    ShowFrame --> CheckApiTime{"Time > 0.5s and\nNot Requesting API?"}
     
     CheckApiTime -- Yes --> StartThread["Create Background Thread\nrequest_roboflow"]
-    StartThread --> Compress["Compress JPEG 70% & Encode Base64"]
+    StartThread --> Compress["Compress JPEG 70% and Encode Base64"]
     Compress --> CallAPI[Send HTTP POST to Roboflow REST API]
     CallAPI --> RecvJSON["Receive JSON & Update Predictions"]
     
     CheckApiTime -- No / Parallel --> CheckPredTime{"Latest AI Result\nAge <= 1.5s?"}
     RecvJSON --> CheckPredTime
     
-    CheckPredTime -- Yes --> FilterConf{"Confidence >= 50% &\nIs Disease Class?"}
+    CheckPredTime -- Yes --> FilterConf{"Confidence >= 50% and\nIs Disease Class?"}
     FilterConf -- Yes --> DrawRed["Draw Red Box + Confidence Text\nAppend to detected_mold_list"] --> CheckAlert
     FilterConf -- No --> CheckAlert
     
